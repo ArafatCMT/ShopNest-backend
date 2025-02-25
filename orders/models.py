@@ -1,6 +1,8 @@
 from django.db import models
 from users.models import Customer
+from products.models import Product
 from django.utils import timezone
+
 
 PAYMENT_STATUS = [
     ('Unpaid', 'Unpaid'),
@@ -17,7 +19,8 @@ ORDER_STATUS = [
 # Create your models here.
 class Order(models.Model):
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE)
-    products = models.JSONField(default=list)
+    product = models.ForeignKey(Product, related_name='orders', on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.PositiveIntegerField(null=True, blank=True)
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS, default='Unpaid')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     order_status = models.CharField(max_length=20, choices=ORDER_STATUS, default='Pending')

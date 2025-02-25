@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import Customer
+from users.models import Customer, UsedToken
 
 # Register your models here.
 
@@ -11,6 +11,10 @@ class CustomerAdmin(admin.ModelAdmin):
     
     def username(self, obj):
         return obj.user.username
+    
+    def is_verified(self, obj):
+        return obj.user.is_active
 
 
 admin.site.register(Customer,CustomerAdmin)
+admin.site.register(UsedToken)
