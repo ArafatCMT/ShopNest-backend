@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate
+from django.shortcuts import render,redirect
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,7 +11,33 @@ from datetime import datetime, timedelta, timezone
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
 # Create your views here.
+
+def token_genarate(user):
+    token = jwt.encode(
+            {
+                'user_id':user.id,
+                'email': user.email,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15)  #  15 minute
+            },
+            settings.SECRET_KEY,
+            algorithm="HS256"
+        )
+    return token
+
+def SendEmail(user, verification_link):
+    email_subject = 'Verify Your Account on ShopNest'
+    email_body = render_to_string('verification_mail.html', {'verification_link': verification_link, 'username':user.username})
+    email = EmailMultiAlternatives(
+            subject=email_subject,
+            body="",
+            from_email=settings.EMAIL_HOST_USER,
+            to=[user.email]
+        )
+    email.attach_alternative(email_body, "text/html")
+    email.send()
+
 
 class RegistrationView(APIView):
     serializer_class = serializers.RegisterSerializer
@@ -24,33 +50,22 @@ class RegistrationView(APIView):
             # print(customer, customer.id)
 
             # token genarate kortaci
-            token = jwt.encode(
-                {
-                    'user_id':user.id,
-                    'email': user.email,
-                    "exp": datetime.now(timezone.utc) + timedelta(minutes=15)  #  15 minute
-                },
-                settings.SECRET_KEY,
-                algorithm="HS256"
-            )
+            token = token_genarate(user)
 
-            verification_link = f"http://127.0.0.1:8000/verify/email/{token}"
-
-            email_subject = 'Verify Your Account on ShopNest'
-            email_body = render_to_string('verification_mail.html', {'verification_link': verification_link})
-            email = EmailMultiAlternatives(email_subject, '' , to=[user.email])
-            email.attach_alternative(email_body, "text/html")
-            email.send()
+            verification_link = f"http://127.0.0.1:8000/api/verify/email/{token}"
+            
+            # SendEmail function all 
+            SendEmail(user, verification_link)
 
             # print(user)
             return Response("Check your email for confirmation", status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def Activate(token):
+def Activate(request, token):
     try:
-        # check kortaci token ta age used hoica ki na 
+        # check kortaci token ta age used hoica ki na
         if UsedToken.objects.filter(token=token).exists():
-            return {'error': "Token already used!", 'status': status.HTTP_400_BAD_REQUEST}
+            return render(request, 'error.html', {'error': "Token already used!"})
         
         # token ta decode kortaci
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
@@ -58,20 +73,21 @@ def Activate(token):
         user = User.objects.get(id=payload['user_id']) 
 
         if not user.is_active:
+            print(user.username)
             user.is_active = True
             user.save()
 
             # token ta store koratci karon token age used hoi nai 
             UsedToken.objects.create(token=token)
-            return {'message': 'Email verified successfully!', 'status': status.HTTP_200_OK}
-        return {"message": "Email already verified!", "status": status.HTTP_200_OK}
+            return redirect('login')
+        return redirect('register')
     
     except jwt.ExpiredSignatureError:
-        return {"error": "Verification link expired!", "status": status.HTTP_400_BAD_REQUEST}
+        return render(request, 'error.html', {'error': "Verification link expired!"})
     except jwt.DecodeError:
-        return {"error": "Invalid verification link!", "status": status.HTTP_400_BAD_REQUEST}
+        return render(request, 'error.html', {'error': "Invalid verification link!"})
     except User.DoesNotExist:
-        return {"error": "User not found!", "status": status.HTTP_404_NOT_FOUND}
+        return render(request, 'error.html', {'error': "User not found!"})
 
 
 class LoginView(APIView):
@@ -86,11 +102,18 @@ class LoginView(APIView):
             print(username,password)
 
             user = authenticate(username=username, password=password)
+            print(user)
 
-            if user is not None:
+            if user:            
                 customer = Customer.objects.get(user = user)
+                login(request, user)
+                refresh = RefreshToken.for_user(user)
                 
-                return Response(serializer.data, {'details': 'login successfully'}, status=status.HTTP_200_OK)
+                return Response({
+                    'refresh' : str(refresh),
+                    'access': str(refresh.access_token),
+                    'customer_id': customer.id
+                }, status.HTTP_200_OK)
             else:
                 return Response({'error': "Invalid Credential"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors)
