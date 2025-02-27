@@ -36,3 +36,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required = True)
     password = serializers.CharField(required = True)
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
