@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from admin_panel.permissions import IsNotAuthenticated
 # Create your views here.
 
 def token_genarate(user):
@@ -121,7 +121,6 @@ class LoginView(APIView):
     
 
 class LogoutView(APIView):
-    # permission_classes = [IsAuthenticated]
     serializer_class = serializers.LogoutSerializer
 
     def post(self, request, format=None):
@@ -132,7 +131,6 @@ class LogoutView(APIView):
             # print(refresh_token)
             try: 
                 token = RefreshToken(refresh_token)
-                print(token)
                 print('logout')
                 token.blacklist()
                 return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
