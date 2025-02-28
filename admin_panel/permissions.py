@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from .models import Admin
 
 class IsNotAuthenticated(BasePermission):
     def has_permission(self, request, view):

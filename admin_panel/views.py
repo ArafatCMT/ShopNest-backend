@@ -7,9 +7,12 @@ from .models import Admin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import IsNotAuthenticated
+
 
 
 class AdminLoginView(APIView): 
+    permission_classes=[IsNotAuthenticated]
     serializer_class = serializers.LoginSerializer
 
     def post(self, request, format=None):
@@ -27,13 +30,13 @@ class AdminLoginView(APIView):
                     return Response({'error': "Invalid Credential"}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     if admin.is_admin:
-                        print(admin)
+                        # print(admin)
                         login(request,user)
-                        refresh = RefreshToken.for_user(user)
+                        refresh_token = RefreshToken.for_user(user)
 
                         return Response({
-                            'refresh': str(refresh),
-                            'access': str(refresh.access_token),
+                            'refresh_token': str(refresh_token),
+                            'access_token': str(refresh_token.access_token),
                             'admin_id' : admin.id
                         })
             else:

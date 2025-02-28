@@ -13,6 +13,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from admin_panel.permissions import IsNotAuthenticated
+from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 def token_genarate(user):
@@ -41,6 +42,7 @@ def SendEmail(user, verification_link):
 
 
 class RegistrationView(APIView):
+    permission_classes = [IsNotAuthenticated]
     serializer_class = serializers.RegisterSerializer
 
     def post(self, request, format=None):
@@ -92,6 +94,7 @@ def Activate(request, token):
 
 
 class LoginView(APIView):
+    permission_classes=[IsNotAuthenticated]
     serializer_class = serializers.LoginSerializer
 
     def post(self, request, format=None):
@@ -105,38 +108,65 @@ class LoginView(APIView):
             user = authenticate(username=username, password=password)
             print(user)
 
-            if user:            
-                customer = Customer.objects.get(user = user)
-                login(request, user)
-                refresh = RefreshToken.for_user(user)
+            if user:
+                try:            
+                    customer = Customer.objects.get(user = user)
+                except Customer.DoesNotExist:
+                    return Response({'error': "Invalid Credential"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    login(request, user)
+                    refresh_token = RefreshToken.for_user(user)
                 
-                return Response({
-                    'refresh' : str(refresh),
-                    'access': str(refresh.access_token),
-                    'customer_id': customer.id
-                }, status.HTTP_200_OK)
+                    return Response({
+                        'refresh_token' : str(refresh_token),
+                        'access_token': str(refresh_token.access_token),
+                        'customer_id': customer.id
+                    }, status.HTTP_200_OK)
             else:
                 return Response({'error': "Invalid Credential"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors)
     
 
 class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = serializers.LogoutSerializer
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            refresh_token = serializer.validated_data['refresh']
+            refresh_token = serializer.validated_data['refresh_token']
             # print(refresh_token)
             try: 
                 token = RefreshToken(refresh_token)
-                print('logout')
+                # print('logout')
                 token.blacklist()
                 return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
             except Exception:
                 return Response({'error':"Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors,  status=status.HTTP_400_BAD_REQUEST)
+
+
+class RefreshTokenView(APIView):
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")  #  Key must match frontend
+
+        if not refresh_token:
+            return Response({"error": "Refresh token not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            new_access_token = str(refresh.access_token)  #  Access token generate korchi
+            print('hello')
+            return Response({
+                "access_token": new_access_token, #  Only access token return korchi
+            }, status=status.HTTP_200_OK)
+        
+        except Exception:
+            return Response({"error": "Invalid refresh token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
         
         
         
@@ -145,15 +175,3 @@ class LogoutView(APIView):
 
 
 
-# try:
-#             refresh_token = request.data.get('refresh')
-            
-#             if not refresh_token:
-#                 return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
-#             token = RefreshToken(refresh_token)
-#             token.blacklist()
-#             return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
-        
-#         except Exception as e:
-#             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)

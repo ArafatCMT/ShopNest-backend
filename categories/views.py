@@ -3,9 +3,13 @@ from rest_framework.views import APIView
 from . import serializers
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+from rest_framework import generics
+from .models import Category
 
 # Create your views here.
 class AddCategory(APIView):
+    permission_classes = [IsAdminUser]
     serializer_class = serializers.CategorySerializer
 
     def post(self, request, format=None):
@@ -13,5 +17,10 @@ class AddCategory(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            return Response({'details': 'category added successfully'} , status=status.HTTP_201_CREATED)
+            return Response(serializer.data , status=status.HTTP_201_CREATED)
         return Response(serializer.errors)
+    
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+    permission_classes = [IsAdminUser]

@@ -38,4 +38,4 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required = True)
 
 class LogoutSerializer(serializers.Serializer):
-    refresh = serializers.CharField(required=True)
+    refresh_token = serializers.CharField(required=True)
