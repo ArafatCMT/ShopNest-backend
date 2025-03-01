@@ -6,6 +6,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from . models import Product
 from rest_framework.exceptions import NotFound
+from rest_framework.generics import ListAPIView
+from categories.models import Category
 
 # Create your views here.
 class AddProductView(APIView):
@@ -79,4 +81,27 @@ class ProductDeleteView(APIView):
         product = self.get_objects(pk)
         product.delete()
         return Response({"message": "Product deleted successfully"}, status=status.HTTP_200_OK)
+    
+
+class AllProductsView(ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = serializers.ProductSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class CategoryWiseProductView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.ProductSerializer
+
+    def get_objects(self, slug):
+        try:
+            return Category.objects.get(slug=slug)
+        except Category.DoesNotExist:
+            raise NotFound(detail="Category doesn't exist")
+        
+    def get(self, request, category_slug):
+        category = self.get_objects(category_slug)
+        products = Product.objects.filter(category=category)
+        serializer = self.serializer_class(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
