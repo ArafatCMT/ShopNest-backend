@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from . import serializers
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework import generics
 from .models import Category
 
@@ -24,3 +24,8 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = [IsAdminUser]
+
+class AllCategoriesView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+    permission_classes = [IsAuthenticated]
