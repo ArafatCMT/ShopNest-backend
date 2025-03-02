@@ -151,14 +151,16 @@ class RefreshTokenView(APIView):
 
     def post(self, request):
         refresh_token = request.data.get("refresh")  #  Key must match frontend
+        # print(f"refresh_token:- {refresh_token}")
 
         if not refresh_token:
             return Response({"error": "Refresh token not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # print('Before RefreshToken')
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)  #  Access token generate korchi
-            print('hello')
+            # print('After RefreshToken')
             return Response({
                 "access_token": new_access_token, #  Only access token return korchi
             }, status=status.HTTP_200_OK)
@@ -167,7 +169,26 @@ class RefreshTokenView(APIView):
             return Response({"error": "Invalid refresh token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-        
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, format=None):
+        serializer = serializers.ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            password = serializer.validated_data['old_password']
+            new_password = serializer.validated_data['new_password']
+
+            if not request.user.check_password(raw_password=password):
+                return Response({'error': 'password not match'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            else:
+                request.user.set_password(new_password)
+                request.user.save()
+                # print(password, new_password)
+                # print(request.user)
+                return Response({'success': 'password changed successfully'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         
 

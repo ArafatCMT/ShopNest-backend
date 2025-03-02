@@ -34,8 +34,26 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required = True)
-    password = serializers.CharField(required = True)
+    username = serializers.CharField(required = True, write_only=True)
+    password = serializers.CharField(required = True, write_only=True)
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(required=True)
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+
+class CustomerSerializer(serializers.ModelSerializer):
+    # UserSerializer er field gula use korar jonno UserSerializer include korlam
+    user = UserSerializer()
+
+    class Meta:
+        model = models.Customer
+        fields = ['user', 'profile_picture_url', 'address', 'phone_number', 'gender']
