@@ -190,7 +190,27 @@ class ChangePasswordView(APIView):
                 return Response({'success': 'password changed successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        
+
+class CustomerProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, fromat=None):
+        customer = Customer.objects.get(user=request.user)
+        serializer = serializers.CustomerSerializer(customer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, *args, **kwargs):
+        try:
+            customer = Customer.objects.get(user=request.user)
+        except Customer.DoesNotExist:
+            return Response({"error":"Customer dosn't exist."})
+        else:
+            serializer = serializers.CustomerSerializer(customer, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

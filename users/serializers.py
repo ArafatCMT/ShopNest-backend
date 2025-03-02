@@ -49,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
+        read_only_fields = ['username']
 
 class CustomerSerializer(serializers.ModelSerializer):
     # UserSerializer er field gula use korar jonno UserSerializer include korlam
@@ -56,4 +57,26 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Customer
-        fields = ['user', 'profile_picture_url', 'address', 'phone_number', 'gender']
+        fields = ['user', 'profile_picture_url', 'address', 'phone_number', 'gender', 'join_dated']
+
+    def update(self, instance, validated_data):
+        # pop method ta deye validated_data theke user field ke remove korlam. jehetu user ek ta nasted object.Jokhon user data thake na, tokhon None return korbe, ar error raise korbe na.
+        user_data = validated_data.pop('user', None)
+        # print(user_data)
+
+        # User instance update hobe jodi user_data provide kora hoi.
+        if user_data:
+            user = instance.user
+            # print(user)
+            for key, value in user_data.items():
+                # print(key,value)
+                setattr(user, key, value) #update user serializer er fields
+            user.save()
+
+            # customer model er field gula update kora hocca
+            for key,value in validated_data.items():
+                setattr(instance, key, value) # update customer serializer er fields
+                # print(key,value)
+
+            instance.save()
+        return instance

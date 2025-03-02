@@ -23,5 +23,8 @@ class Review(models.Model):
     comment = models.TextField(null=True,blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        ordering = ['-created_at']  # Default ordering to show latest review first
+
     def __str__(self):
         return f"{self.product}"
