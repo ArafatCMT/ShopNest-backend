@@ -2,6 +2,7 @@ from django.db import models
 from products.models import Product
 from users.models import Customer
 from django.utils import timezone
+from decimal import Decimal
 
 RATINGS = [
     (1.0, 1.0),
@@ -19,7 +20,7 @@ RATINGS = [
 class Review(models.Model):
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, related_name='reviews', on_delete=models.CASCADE)
-    rating = models.DecimalField(decimal_places=1, max_digits=3, choices=RATINGS, default=0.0)
+    rating = models.DecimalField(decimal_places=1, max_digits=3, choices=RATINGS, default=Decimal("0.0"))
     comment = models.TextField(null=True,blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 

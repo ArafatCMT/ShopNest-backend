@@ -203,7 +203,7 @@ class CustomerProfileView(APIView):
         try:
             customer = Customer.objects.get(user=request.user)
         except Customer.DoesNotExist:
-            return Response({"error":"Customer dosn't exist."})
+            return Response({"error":"You are not authorized to update this profile."})
         else:
             serializer = serializers.CustomerSerializer(customer, data=request.data, partial=True)
 
