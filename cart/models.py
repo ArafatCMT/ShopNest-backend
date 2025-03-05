@@ -24,6 +24,7 @@ class Cart(models.Model):
     class Meta:
         # Jodi ekta product cart e already thake, tahole oi product abar notun kore cart e add kora jabe na. Quantity increase hote parbe, kintu notun entry create kora jabe na.
         unique_together = ('customer', 'product') 
+        ordering = ['-created_at']  # Default ordering to show latest review first
 
     def __str__(self):
         return f"Cart of {self.customer.user.username} - {self.product.name} (Quantity: {self.quantity})"

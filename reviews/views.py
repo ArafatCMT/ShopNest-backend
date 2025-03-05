@@ -61,8 +61,16 @@ class ReviewDetailView(APIView):
         # je fields gula update kora jabe ta allowed_fields er moddhe bola holo
         allowed_fields = ['comment', 'rating']
 
+        invalid_fields = [key for key in request.data.keys() if key not in allowed_fields]
+
+        if invalid_fields:
+            return response.Response(
+                {"error": f"No valid fields provided for update: {', '.join(invalid_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
         update_data = {key:value for key,value in request.data.items() if key in allowed_fields}
-        # print('update',update_data)
+        # print('update',update_data, request.data.keys())
 
         # check kortaci allowed_fields er value cara onno kono value ase ki na , shudu allowed_fields er value gula i nebe onno thai ek ta {} dictonary update_data te assign hobe
         if not update_data:
@@ -86,3 +94,16 @@ class ReviewDetailView(APIView):
         return response.Response({"message": "Review deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+class SpecificProductReviewsView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.ReviewSerializer
+
+    def get(self, request, pk):
+        try:
+            product = models.Product.objects.get(pk=pk)
+        except models.Product.DoesNotExist:
+            return response.Response({'error':"product doesn't exist"}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            reviews = Review.objects.filter(product=product)
+            serializer = self.serializer_class(reviews, many=True)
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
