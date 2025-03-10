@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'orders', views.OrderViewSet, basename='order-view-set'), # get : api/orders/?status=Pending
+router.register(r'customer-orders', views.CustomerOrderViewSet) # get : api/customer-orders/?status=Pending
 
 urlpatterns = [
     path('checkout/', views.CheckOutView.as_view(), name='check-out'), # post
-    path('orders/pending/', views.PendingOrderListView.as_view()), # get
+     path('', include(router.urls)), 
 ]

@@ -1,0 +1,6 @@
+username : emon_07
+password : arafatppi#
+
+
+Store ID: shopn67ce83cc857d4
+Store Password (API/Secret Key): shopn67ce83cc857d4@ssl

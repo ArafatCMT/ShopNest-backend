@@ -35,13 +35,13 @@ class Order(models.Model):
         return f"Order {self.id} - {self.customer.user.first_name} {self.customer.user.last_name}"
     
 
-class OrderHistory(models.Model):
-    customer = models.ForeignKey(Customer, related_name='order_history', on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, related_name='order_history', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
+# class OrderHistory(models.Model):
+#     customer = models.ForeignKey(Customer, related_name='order_history', on_delete=models.CASCADE)
+#     order = models.ForeignKey(Order, related_name='order_history', on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(default=timezone.now)
 
-    class Meta:
-        ordering = ['-created_at']  # Default ordering to show latest order first
+#     class Meta:
+#         ordering = ['-created_at']  # Default ordering to show latest order first
 
-    def __str__(self):
-        return f"Order #{self.order.id} placed by {self.customer.user.first_name} {self.customer.user.last_name}"
+#     def __str__(self):
+#         return f"Order #{self.order.id} placed by {self.customer.user.first_name} {self.customer.user.last_name}"

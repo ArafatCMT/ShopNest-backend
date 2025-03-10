@@ -8,7 +8,7 @@ class OrderSerializer(serializers.ModelSerializer):
         # read_only_fields = ['total_amount']
         # read_only_fields = ['customer']
 
-class OrderHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.OrderHistory
-        fields = '__all__'
+# class OrderHistorySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.OrderHistory
+#         fields = '__all__'
