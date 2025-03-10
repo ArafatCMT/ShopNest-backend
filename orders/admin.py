@@ -3,7 +3,7 @@ from .models import Order
 # Register your models here.
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['customer', 'product', 'total_amount', 'payment_status', 'order_status', 'created_at', 'is_delivered']
+    list_display = ['id', 'customer', 'product', 'quantity', 'total_amount', 'payment_status', 'order_status', 'created_at', 'is_delivered']
 
 # class OrderHistoryAdmin(admin.ModelAdmin):
 #     list_display = ['order_id', 'customer', 'product', 'total_amount', 'payment_status', 'order_status',  'is_delivered', 'created_at']
