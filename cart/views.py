@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 # Create your views here.
 
+# cart e item add r item er quantity ei view er maddhomei hocca
 class AddToCartView(views.APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = serializers.CartSerializer
@@ -33,7 +34,15 @@ class AddToCartView(views.APIView):
         # jodi cart e product ta already add kora thake tobe shudu quantity ta 1 increase kore dicci 
         if is_exist:
             cart_item = models.Cart.objects.get(product=product, customer=customer)
-            cart_item.quantity = cart_item.quantity + 1
+
+            # Cart er quantity jodi available stock er theke beshi hoy, taile check korbe
+            if cart_item.quantity + 1 > product.quantity:
+                return Response(
+                    {"error": "Insufficient stock available."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            cart_item.quantity += 1
             cart_item.total_price = cart_item.quantity * cart_item.total_price
             cart_item.save()
 
