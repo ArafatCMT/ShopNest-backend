@@ -7,6 +7,7 @@ from django.utils import timezone
 PAYMENT_STATUS = [
     ('Unpaid', 'Unpaid'),
     ('Paid', 'Paid'),
+    ('Failed', 'Failed'),
 ]
 ORDER_STATUS = [
     ('Pending', 'Pending'),
