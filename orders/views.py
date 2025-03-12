@@ -12,6 +12,7 @@ from cart.serializers import CartSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework import pagination, filters
 # Create your views here.
+
 class CheckOutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -93,5 +94,65 @@ class OrderViewSet(ReadOnlyModelViewSet):
     serializer_class = serializers.OrderSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [Find_status_wise_orders]
+
+
+class OrderStatusUpdateView(APIView):
+    permission_classes = [IsAdminUser]
+    # serializer_class = serializers.OrderSerializer
+
+    def get_object(self, pk):
+        try:
+            return Order.objects.get(pk=pk)
+        except Order.DoesNotExist:
+            raise NotFound({"detail":"Order not found."})
+
+    def patch(self, request, pk):
+        order = self.get_object(pk)
+        # jodi order status pending, canceled, ba delivered hoi tobe order status update kora hobe na 
+        if order.order_status in ['Pending', 'Canceled', 'Delivered']:
+            return Response({
+                "message": "The order is either pending, canceled, or delivered. Status update is not allowed."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # check kortaci order status cara onno kono field provide kora hoica ki na 
+        if not 'order_status' in request.data:
+            return Response({
+                "error": "Only 'order_status' can be updated."
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Validating the status update
+        valid_statuses = ['Shipped', 'Delivered']
+        new_status = request.data.get('order_status')
+
+        # check kortaci order status empty ase ki na , ei ta empty rakha jabe na 
+        if not new_status:
+            return Response({"error": "Order status is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # check kortaci jei status ta provide kora hoiva oi ta valid status ki na 
+        if new_status not in valid_statuses:
+            return Response({"error": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if order.order_status == 'Processing' and new_status == 'Shipped':
+            order.order_status = new_status
+            # email function call hobe
+            print("Shipped")
+            pass
+
+        elif order.order_status == 'Shipped' and new_status == 'Delivered':
+            order.order_status = new_status
+            # email function call hobe
+            print("Delivered")
+            pass
+
+        serializer = serializers.OrderSerializer(order, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            # serializer.save()  # Save the updated order
+            return Response({
+                "message": "Order status updated successfully.",
+                "order": serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     

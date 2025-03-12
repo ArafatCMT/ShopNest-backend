@@ -8,5 +8,6 @@ router.register(r'customer-orders', views.CustomerOrderViewSet) # get : api/cust
 
 urlpatterns = [
     path('checkout/', views.CheckOutView.as_view(), name='check-out'), # post
-     path('', include(router.urls)), 
+    path('', include(router.urls)), 
+    path('order/update/<int:pk>/', views.OrderStatusUpdateView.as_view(), name='order-status-update'), # patch, api/order/update/<int:order_id>/
 ]
