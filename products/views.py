@@ -8,6 +8,7 @@ from . models import Product
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListAPIView
 from categories.models import Category
+from rest_framework import filters
 
 # Create your views here.
 class AddProductView(APIView):
@@ -87,6 +88,8 @@ class AllProductsView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = serializers.ProductSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name'] # Product er name er opor vitti kore product search hobe
 
 
 class CategoryWiseProductView(APIView):
