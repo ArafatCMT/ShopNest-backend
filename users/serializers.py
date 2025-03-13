@@ -73,10 +73,9 @@ class CustomerSerializer(serializers.ModelSerializer):
                 setattr(user, key, value) #update user serializer er fields
             user.save()
 
-            # customer model er field gula update kora hocca
-            for key,value in validated_data.items():
-                setattr(instance, key, value) # update customer serializer er fields
-                # print(key,value)
-
-            instance.save()
+        # customer model er field gula update kora hocca
+        for key,value in validated_data.items():
+            setattr(instance, key, value) # update customer serializer er fields
+            # print(key,value)
+        instance.save()
         return instance

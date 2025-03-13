@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsNotAuthenticated
+from rest_framework.permissions import IsAdminUser
+from .serializers import AdminSerializer
 
 class AdminLoginView(APIView): 
     permission_classes=[IsNotAuthenticated]
@@ -42,3 +44,24 @@ class AdminLoginView(APIView):
         return Response(serializer.errors)
 
 
+class AdminProfileView(APIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminSerializer
+
+    def get(self, request):
+        admin = Admin.objects.get(user=request.user)
+        serializer = AdminSerializer(admin)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, *args, **kwargs):
+        try:
+            admin = Admin.objects.get(user=request.user)
+        except Admin.DoesNotExist:
+            return Response({"error":"You are not authorized to update this profile."})
+        
+        serializer = serializers.CustomerSerializer(admin, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
