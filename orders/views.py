@@ -11,6 +11,9 @@ from orders.models import Order
 from cart.serializers import CartSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework import pagination, filters
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
 # Create your views here.
 
 class CheckOutView(APIView):
@@ -96,6 +99,32 @@ class OrderViewSet(ReadOnlyModelViewSet):
     filter_backends = [Find_status_wise_orders]
 
 
+# Shipped mail function
+def send_shipment_email(customer, product ):
+    email_subject = "Your Order Has Been Shipped! 🚚📦"
+    email_body = render_to_string('shipped_mail.html', {'customer_name': customer.user.first_name, 'product_name':product.name})
+    email = EmailMultiAlternatives(
+            subject=email_subject,
+            body="",
+            from_email=settings.EMAIL_HOST_USER,
+            to=[customer.user.email]
+        )
+    email.attach_alternative(email_body, "text/html")
+    email.send()
+
+# delivered mail function
+def send_delivery_email(customer, product ):
+    email_subject = "Your Order Has Been Delivered! 🎉"
+    email_body = render_to_string('delivered_mail.html', {'customer_name': customer.user.first_name, 'product_name':product.name})
+    email = EmailMultiAlternatives(
+            subject=email_subject,
+            body="",
+            from_email=settings.EMAIL_HOST_USER,
+            to=[customer.user.email]
+        )
+    email.attach_alternative(email_body, "text/html")
+    email.send()
+
 class OrderStatusUpdateView(APIView):
     permission_classes = [IsAdminUser]
     # serializer_class = serializers.OrderSerializer
@@ -132,22 +161,27 @@ class OrderStatusUpdateView(APIView):
         if new_status not in valid_statuses:
             return Response({"error": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
         
+        # order status jodi Processing thake tobe order status Shipped hobe 
         if order.order_status == 'Processing' and new_status == 'Shipped':
             order.order_status = new_status
             # email function call hobe
+            send_shipment_email(order.customer, order.product)
             print("Shipped")
             pass
 
+        # order status jodi shipped thake tobe order status delivered hobe r is delivered true hobe 
         elif order.order_status == 'Shipped' and new_status == 'Delivered':
             order.order_status = new_status
             # email function call hobe
+            order.is_delivered = True
+            send_delivery_email(order.customer, order.product)
             print("Delivered")
             pass
 
         serializer = serializers.OrderSerializer(order, data=request.data, partial=True)
 
         if serializer.is_valid():
-            # serializer.save()  # Save the updated order
+            serializer.save()  # Save the updated order
             return Response({
                 "message": "Order status updated successfully.",
                 "order": serializer.data
